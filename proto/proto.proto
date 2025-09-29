@@ -9,7 +9,7 @@ service serv {
 }
 
 message UserRequest {
-  string SessionToken = 1;
+  int64 SessionToken = 1;
   string UserId = 2;
 }
 
@@ -18,7 +18,7 @@ message UserLogin {
   string plaintextPassword = 2;
 }
 message SessionToken {
-  string temp = 1;
+  int64 temp = 1;
 }
 message UserID {
   string userName = 1;
@@ -27,7 +27,7 @@ message UserDetails {
   string details = 1;
 }
 message RiskScore {
-  int64 score = 1;
+  int32 score = 1;
 }
 
 
