@@ -1,5 +1,6 @@
 syntax = "proto3";
 option go_package = "example/proto_example";
+option java_package = "com.example.testgrpc";
 
 service serv {
   rpc Login(UserLogin) returns (SessionToken) {}
@@ -23,7 +24,7 @@ message UserID {
   string userName = 1;
 }
 message UserDetails {
-  string detauls = 1;
+  string details = 1;
 }
 message RiskScore {
   int64 score = 1;
