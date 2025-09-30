@@ -11,7 +11,7 @@ func main() {
 	// connection
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(":9000", grpc.WithInsecure() )
-	if err != nil { log.Fatalf("could not connect, %s", err)}
+	if err != nil { log.Fatalf("GRPC: could not connect,\n%s", err)}
 	defer conn.Close()
 	c := pb.NewServClient(conn)
 
