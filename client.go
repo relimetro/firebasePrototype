@@ -15,20 +15,28 @@ func main() {
 	defer conn.Close()
 	c := pb.NewServClient(conn)
 
-	// send msg
+	// Login
 	message := pb.UserLogin { UserName: "name", PlaintextPassword:"pass", }
-	response, err := c.Login(context.Background(), &message)
+	mySession, err := c.Login(context.Background(), &message)
 	if err != nil { log.Fatalf("Err: send msg: %s", err) }
-	log.Printf("Response from server: %d", response.Temp)
+	log.Printf("Response from server: %d", mySession.Temp)
 
-	message2 := pb.UserRequest { UserId: "name", SessionToken:response.Temp, }
+	// Get Details
+	message2 := pb.UserRequest { UserId: "name", SessionToken:mySession.Temp, }
 	response2, err := c.GetDetails(context.Background(), &message2)
 	if err != nil { log.Fatalf("Err: send msg2: %s", err) }
 	log.Printf("Response from server: %s", response2.Details)
 
-	message3 := pb.UserRequest { UserId: "nam", SessionToken:response.Temp, }
+	// Invalid GetDetails
+	message3 := pb.UserRequest { UserId: "nam", SessionToken:mySession.Temp, }
 	response3, err := c.GetDetails(context.Background(), &message3)
 	if err != nil { log.Fatalf("Err: send msg3: %s", err) }
 	log.Printf("Response from server: %s", response3.Details)
+
+	// Get Risk
+	// message4 := *mySession
+	// response4, err := c.GetRisk(context.Background(), &message4)
+	// if err != nil { log.Fatalf("Err: send msg3: %s", err) }
+	// log.Printf("Response from server: %d", response4.Score)
 
 }

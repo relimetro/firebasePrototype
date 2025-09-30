@@ -3,6 +3,8 @@ package main
 import(
 	"log" // for loggin
 	"sync" // for mutex
+	"google.golang.org/api/iterator"
+	"fmt"
 
 	// Grpc
 	"context"
@@ -12,7 +14,7 @@ import(
 
 	// firebase - firestore
 	firebase "firebase.google.com/go"
-	"firebase.google.com/go/db"
+	firestore "cloud.google.com/go/firestore"
 	"google.golang.org/api/option"
 )
 
@@ -88,7 +90,26 @@ func (s *server) GetDetails(ctx context.Context, x *pb.UserRequest) (*pb.UserDet
 
 // GetRisk (SessionToken -> RiskScore)
 func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore, error) {
-	log.Printf("GetRisk: %d", x.Temp)
+
+	// Mutex
+	Session_Tokens.mu.RLock()
+	defer Session_Tokens.mu.RUnlock()
+	username := Session_Tokens.data[x.Temp]
+
+	log.Printf("GetRisk: Session: %d username: %s", x.Temp, username)
+
+	// find
+	iter := client.Collection("users").Documents(context.Background())
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done { break }
+		if err != nil { log.Fatalf("failed to iterate %v",err)}
+		println(doc.Data())
+		fmt.Printf("Docuemnt: %#v")
+
+	}
+
+
 	return &pb.RiskScore{
 		Score: 0, }, nil
 }
@@ -101,70 +122,16 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 ///////////////////////////////////////////////////////////////
 /// firebase
 
-type FireDB struct {
-	*db.Client }
-var fireDB FireDB
-
-func (db *FireDB) Connect() error {
+var client *firestore.Client
+func firebaseInit(){
+	FBctx := context.Background()
 	home := "/home/cathal/notes/MTU/project/goTest/"
-	ctx := context.Background()
-	opt := option.WithCredentialsFile(home+"firebase.json")
-	dbUrl := "https://test-fd3ea.firebaseio.com"
-	config := &firebase.Config{DatabaseURL: dbUrl}
-	app, err := firebase.NewApp(ctx,config,opt)
-	if err != nil { log.Fatalf("error init app: %v", err ); return err }
-	client, err := app.Database(ctx)
-	if err != nil { log.Fatalf("error init db: %v", err ); return err }
-	db.Client = client
-	return nil
-}
-
-func FirebaseDB() *FireDB {
-	return &fireDB
-}
-
-type UserDB struct {
-	BIN string
-	username string
-	password string
-	riskFactor int
-
-}
-
-type Store struct { *FireDB }
-func NewStore() *Store {
-	d := FirebaseDB()
-	return &Store{ FireDB:d, }
-}
-
-// Create a new user
-func (s *Store) Create(b *UserDB) error {
-	println("20")
-	if err := s.NewRef("users/"+b.BIN).Set(context.Background(), b); err != nil {
-		log.Fatalf("Create: %v", err); return err }
-	println("21")
-	return nil
-}
-
-func (s *Store) Delete(b *UserDB) error {
-	return s.NewRef("users/" + b.BIN).Delete(context.Background())
-}
-
-func (s *Store) GetByBin(b string) (*UserDB, error) {
-	println("10")
-	bin := &UserDB{}
-	println("11")
-	if err := s.NewRef("bins/"+b).Get(context.Background(), bin); err != nil {
-		log.Fatalf("error getBin db: %v", err ); return nil, err }
-	println("12")
-	if bin.BIN == "" {
-		return nil, nil }
-	println("13")
-	return bin, nil
-}
-
-func (s *Store) Update(b string, m map[string]interface{}) error {
-	return s.NewRef("users/"+b).Update(context.Background(), m)
+	sa := option.WithCredentialsFile(home+"firebase.json")
+	app, err := firebase.NewApp(FBctx,nil,sa)
+	if err != nil { log.Fatalln(err)}
+	var err2 error
+	client, err2 = app.Firestore(FBctx)
+	if err2 != nil { log.Fatalln(err)}
 }
 
 
@@ -175,40 +142,14 @@ func (s *Store) Update(b string, m map[string]interface{}) error {
 /// Main
 
 func main() {
-	lis, err := net.Listen("tcp", ":9000");
-	if err != nil { log.Fatalf("failed to listen: %v", err) }
 
-
-	// connect
-	dbErr := FirebaseDB().Connect()
-	if dbErr != nil { log.Fatalf("error init db: %v", dbErr ) }
-	// store := NewStore()
-
-	// A new BIN creation
-	// err = store.Create(&UserDB{
-	// 	BIN: "1234",
-	// 	username: "cathal",
-	// 	password: "bob",
-	// 	riskFactor: 1,
-	// })
-
-
-	// store := NewStore()
-	// bin, getErr := store.GetByBin("users")
-	// if getErr != nil { log.Fatalf("error store: %v", dbErr ) }
-	// print("username: %s",bin)
-
-
-	ctx := context.Background()
-	home := "/home/cathal/notes/MTU/project/goTest/"
-	sa := option.WithCredentialsFile(home+"firebase.json")
-	app, err := firebase.NewApp(ctx,nil,sa)
-	if err != nil { log.Fatalln(err)}
-	client, err := app.Firestore(ctx)
-	if err != nil { log.Fatalln(err)}
+	// firebase settup
+	firebaseInit()
 	defer client.Close()
+	FBctx := context.Background()
 
-	_, _, err2 := client.Collection("users").Add(ctx, map[string]interface{}{
+	// test add
+	_, _, err2 := client.Collection("users").Add(FBctx, map[string]interface{}{
 		"username":"ada",
 		"password":"12345",
 		"riskFactor":19,
@@ -219,9 +160,16 @@ func main() {
 
 
 
+
+	// grpc connection
+	lis, err := net.Listen("tcp", ":9000");
+	if err != nil { log.Fatalf("failed to listen: %v", err) }
+
+	// start GRPC
 	grpcServer := grpc.NewServer()
 	pb.RegisterServServer(grpcServer, &server{})
-	log.Printf("Ready!!")
+	log.Printf("Ready!! >:0")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve") }
+
 }
