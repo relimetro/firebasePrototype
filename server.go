@@ -4,7 +4,6 @@ import(
 	"log" // for loggin
 	"sync" // for mutex
 	"google.golang.org/api/iterator"
-	"fmt"
 
 	// Grpc
 	"context"
@@ -23,6 +22,17 @@ import(
 ///////////////////////////////////////////////////////////////
 /// stuff and things
 
+
+// Firebase
+type UserRecord struct {
+	Username string
+	RiskFactor int32
+	// Password string
+}
+
+
+
+// Auth/Tokens
 type Session_Tokens_Type struct {
 	data [65535]string
 	mu sync.RWMutex
@@ -97,26 +107,33 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 	// Mutex Read Lock
 	Session_Tokens.mu.RLock()
-	defer Session_Tokens.mu.RUnlock()
-	username := Session_Tokens.data[x.Temp]
+	username := Session_Tokens.data[x.Temp] // todo, validate valid session Token (not out of bounds etc)
+	Session_Tokens.mu.RUnlock()
 
 	log.Printf("GetRisk: Session: %d username: %s", x.Temp, username)
 
 	// find
 	iter := client.Collection("users").Documents(context.Background())
-	for {
+	for { // todo: probably a way to do this on server
+		// iterate
 		doc, err := iter.Next()
 		if err == iterator.Done { break }
 		if err != nil { log.Fatalf("failed to iterate:\n%v",err)}
-		println(doc.Data())
-		fmt.Printf("Docuemnt: %#v")
 
+		// get data of record
+		var docData UserRecord
+		if err := doc.DataTo(&docData); err != nil {
+			log.Fatalf("err2") }
+
+		// check if target user
+		if docData.Username == username {
+			log.Printf("%d",docData.RiskFactor)
+			return &pb.RiskScore{ Score: docData.RiskFactor, }, nil
+		}
 	}
 
-
 	// Dummy Response
-	return &pb.RiskScore{
-		Score: 0, }, nil
+	return &pb.RiskScore{ Score: 0, }, nil
 }
 
 

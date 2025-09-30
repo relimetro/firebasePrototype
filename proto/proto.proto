@@ -14,20 +14,20 @@ message UserRequest {
 }
 
 message UserLogin {
-  string userName = 1;
-  string plaintextPassword = 2;
+  string UserName = 1;
+  string PlaintextPassword = 2;
 }
 message SessionToken {
-  int64 temp = 1;
+  int64 Temp = 1;
 }
 message UserID {
-  string userName = 1;
+  string UserName = 1;
 }
 message UserDetails {
-  string details = 1;
+  string Details = 1;
 }
 message RiskScore {
-  int32 score = 1;
+  int32 Score = 1;
 }
 
 

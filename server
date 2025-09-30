@@ -9,8 +9,10 @@ noCredentials(){
 	echo "you willy goose, missing ./firebase.json"
 	echo "this is a file containing credentials which is in .gitignore for obvious reasons"
 	echo "to get this file, go to firebase, project settings > service accounts > generate new private key"
+	exit
 }
 
-[ -f firebase.json ] && startServ || noCredentials
+[ -f firebase.json ] || noCredentials
+startServ
 
 

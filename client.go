@@ -34,9 +34,9 @@ func main() {
 	log.Printf("Response from server: %s", response3.Details)
 
 	// Get Risk
-	// message4 := *mySession
-	// response4, err := c.GetRisk(context.Background(), &message4)
-	// if err != nil { log.Fatalf("Err: send msg3: %s", err) }
-	// log.Printf("Response from server: %d", response4.Score)
+	message4 := *mySession
+	response4, err := c.GetRisk(context.Background(), &message4)
+	if err != nil { log.Fatalf("Err: send msg3: %s", err) }
+	log.Printf("Response from server: %d", response4.Score)
 
 }
