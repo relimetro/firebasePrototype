@@ -147,8 +147,7 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 var client *firestore.Client
 func firebaseInit(){
 	FBctx := context.Background()
-	home := "/home/cathal/notes/MTU/project/goTest/"
-	sa := option.WithCredentialsFile(home+"firebase.json")
+	sa := option.WithCredentialsFile("./firebase.json")
 	app, err := firebase.NewApp(FBctx,nil,sa)
 	if err != nil { log.Fatalf("Firebase: failed to create app:\n%v",err)}
 	var err2 error
