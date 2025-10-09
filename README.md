@@ -12,5 +12,10 @@ use the following command to start a server that manages access to firebase
 use `./client` to send test requests to the server
 
 ## Windows
+
+go run server.go
+
+go run client.go
+
 see [documentation](https://wiki.archlinux.org/title/Installation_guide) for more
 
