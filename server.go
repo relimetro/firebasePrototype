@@ -6,10 +6,11 @@ import(
 	"google.golang.org/api/iterator"
 
 	// Grpc
-	"context"
 	"net"
 	pb "example/proto_example/protoOut"
+	aiProompt "example/proto_example/protoAI"
 	"google.golang.org/grpc"
+	"golang.org/x/net/context"
 
 	// firebase
 	firebase "firebase.google.com/go"
@@ -139,7 +140,23 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 
 func (s *server) ProcessLifestyle(x string) string {
-	return "0" } // todo, grpc into vertexAI
+	// return "0" } // probably better to not reconnect each time idk?
+
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(":50052", grpc.WithInsecure())
+	if err != nil { log.Fatalf("GRPC: cound not connect vertexAI at 50052: \n%s",err)}
+	defer conn.Close()
+	c := aiProompt.NewAiProomptClient(conn)
+
+	message := aiProompt.ProomptMsg { Message: "why is the sky blue"}
+	resp, err := c.HealtcareProompt(context.Background(), &message)
+	if err != nil { log.Fatalf("Err: FTproompt, %s",err)}
+	log.Printf("Response FTproompt: %s",resp.Message)
+	return "0" } 
+ 
+
+
+// } // todo, grpc into vertexAI
 
 // SendLifestyle (SessionToken -> RiskScore)
 func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb.LifestyleResponse, error) {
@@ -153,7 +170,9 @@ func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb
 
 
 	FBctx := context.Background()
-	// calc_risk := ProcessLifestyle(x.Message)
+	calc_risk := s.ProcessLifestyle(x.Message) // vertexAI
+	print(calc_risk)
+
 	// test firebase add
 	_, _, err2 := client.Collection("patientData").Add(FBctx, map[string]interface{}{
 		"data":x.Message,
