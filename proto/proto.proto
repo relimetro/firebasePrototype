@@ -6,22 +6,25 @@ service serv {
   rpc Login(UserLogin) returns (SessionToken) {}
   rpc getDetails(UserRequest) returns (UserDetails) {}
   rpc getRisk(SessionToken) returns (RiskScore) {}
-}
-
-message UserRequest {
-  int64 SessionToken = 1;
-  string UserId = 2;
+  rpc SendLifestyle(LifestyleRequest) returns (LifestyleResponse) {}
 }
 
 message UserLogin {
   string UserName = 1;
   string PlaintextPassword = 2;
 }
-message SessionToken {
-  int64 Temp = 1;
-}
 message UserID {
   string UserName = 1;
+}
+
+
+message UserRequest {
+  int64 SessionToken = 1;
+  string UserId = 2;
+}
+
+message SessionToken {
+  int64 Temp = 1;
 }
 message UserDetails {
   string Details = 1;
@@ -30,6 +33,12 @@ message RiskScore {
   int32 Score = 1;
 }
 
+message LifestyleRequest {
+  string message = 1;
+}
+message LifestyleResponse {
+  bool success = 1;
+}
 
 
 

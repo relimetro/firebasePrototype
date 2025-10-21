@@ -138,6 +138,56 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 
 
+func (s *server) ProcessLifestyle(x:string) string {
+	return "0" } // todo, grpc into vertexAI
+
+// SendLifestyle (SessionToken -> RiskScore)
+func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb.LifestyleResponse, error) {
+
+	// Mutex Read Lock
+	// Session_Tokens.mu.RLock()
+	// username := Session_Tokens.data[x.Temp] // todo, validate valid session Token (not out of bounds etc)
+	// Session_Tokens.mu.RUnlock()
+
+	log.Printf("SendLifestyle:'%s'", x.message)
+
+
+	FBctx := context.Background()
+	test firebase add
+	_, _, err2 := client.Collection("patientData").Add(FBctx, map[string]interface{}{
+		"data":x.message,
+		"calculated_risk":ProcessLifestyle(x.message)
+	})
+	if err2 != nil { log.Fatalf("Failed adding\n%v", err2)}
+
+
+	// find
+	// iter := client.Collection("patientData").Documents(context.Background())
+	// for { // todo: probably a way to do this on server
+	// 	// iterate
+	// 	doc, err := iter.Next()
+	// 	if err == iterator.Done { break }
+	// 	if err != nil { log.Fatalf("failed to iterate:\n%v",err)}
+
+	// 	// get data of record
+	// 	var docData UserRecord
+	// 	if err := doc.DataTo(&docData); err != nil {
+	// 		log.Fatalf("err2") }
+
+	// 	// check if target user
+	// 	if docData.Username == username {
+	// 		log.Printf("%d",docData.RiskFactor)
+	// 		return &pb.RiskScore{ Score: docData.RiskFactor, }, nil
+	// 	}
+	// }
+
+	// Dummy Response
+	return &pb.RiskScore{ Score: 0, }, nil
+}
+
+
+
+
 
 
 
