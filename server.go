@@ -138,7 +138,7 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 
 
-func (s *server) ProcessLifestyle(x:string) string {
+func (s *server) ProcessLifestyle(x string) string {
 	return "0" } // todo, grpc into vertexAI
 
 // SendLifestyle (SessionToken -> RiskScore)
@@ -149,14 +149,15 @@ func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb
 	// username := Session_Tokens.data[x.Temp] // todo, validate valid session Token (not out of bounds etc)
 	// Session_Tokens.mu.RUnlock()
 
-	log.Printf("SendLifestyle:'%s'", x.message)
+	log.Printf("SendLifestyle:'%s'", x.Message)
 
 
 	FBctx := context.Background()
-	test firebase add
+	// calc_risk := ProcessLifestyle(x.Message)
+	// test firebase add
 	_, _, err2 := client.Collection("patientData").Add(FBctx, map[string]interface{}{
-		"data":x.message,
-		"calculated_risk":ProcessLifestyle(x.message)
+		"data":x.Message,
+		// "calculated_risk":calc_risk,
 	})
 	if err2 != nil { log.Fatalf("Failed adding\n%v", err2)}
 
@@ -182,7 +183,7 @@ func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb
 	// }
 
 	// Dummy Response
-	return &pb.RiskScore{ Score: 0, }, nil
+	return &pb.LifestyleResponse{ Success: true, }, nil
 }
 
 

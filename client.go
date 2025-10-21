@@ -36,7 +36,13 @@ func main() {
 	// Get Risk
 	message4 := *mySession
 	response4, err := c.GetRisk(context.Background(), &message4)
-	if err != nil { log.Fatalf("Err: send msg3: %s", err) }
+	if err != nil { log.Fatalf("Err: send msg4: %s", err) }
 	log.Printf("Response from server: %d", response4.Score)
+
+	// Send lifestyle
+	message5 := pb.LifestyleRequest { Message:"123"}
+	response5, err := c.SendLifestyle(context.Background(), &message5)
+	if err != nil { log.Fatalf("Err: send msg5: %s", err) }
+	log.Printf("Response from server: %d", response5.Success)
 
 }
