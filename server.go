@@ -140,17 +140,18 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 
 func (s *server) ProcessLifestyle(x string) string {
-	// return "0" } // probably better to not reconnect each time idk?
+	return "0" // probably better to not reconnect each time idk?
 
+	// not working (error when connect to vertexAI)
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":50052", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
 	if err != nil { log.Fatalf("GRPC: cound not connect vertexAI at 50052: \n%s",err)}
 	defer conn.Close()
 	c := aiProompt.NewAiProomptClient(conn)
 
 	message := aiProompt.ProomptMsg { Message: "why is the sky blue"}
 	resp, err := c.HealtcareProompt(context.Background(), &message)
-	if err != nil { log.Fatalf("Err: FTproompt, %s",err)}
+	if err != nil { log.Fatalf("Err: FTproompt, <%s>, <%d>",err,resp)}
 	log.Printf("Response FTproompt: %s",resp.Message)
 	return "0" } 
  
