@@ -140,20 +140,21 @@ func (s *server) GetRisk(ctx context.Context, x *pb.SessionToken) (*pb.RiskScore
 
 
 func (s *server) ProcessLifestyle(x string) string {
-	return "0" // probably better to not reconnect each time idk?
+	// return "0" // probably better to not reconnect each time idk?
 
-	// not working (error when connect to vertexAI)
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
 	if err != nil { log.Fatalf("GRPC: cound not connect vertexAI at 50052: \n%s",err)}
 	defer conn.Close()
 	c := aiProompt.NewAiProomptClient(conn)
 
-	message := aiProompt.ProomptMsg { Message: "why is the sky blue"}
+	txt := "Diabetic:true,AlcoholLevel:0.084973629, HeartRate:98, BloodOxygenLevel:96.23074296, BodyTemperature:36.22485168, Weight:57.56397754, MRI_Delay:36.42102798, Presecription:None, DosageMg:0, Age:60, EducationLevel:Primary School, DominantHand:Left, Gender:Female, FamilyHistory:false, SmokingStatus:Current Smoker, APOE_e19:false, PhysicalActivity:Sedentary, DepressionStatus:false, MedicationHistory:false, NutritionDiet:Low-Carb Diet, SleepQuality:Poor, ChronicHealthConditionsDiabetes"
+	// txt = "short response why is the sky blue"
+	message := aiProompt.ProomptMsg { Message: txt}
 	resp, err := c.HealtcareProompt(context.Background(), &message)
-	if err != nil { log.Fatalf("Err: FTproompt, <%s>, <%d>",err,resp)}
+	if err != nil { log.Printf("vertexAI not settup in docker, run manualy"); return "0" ; log.Printf("xx: FTproompt, <%s>, <%d>",err,resp); return "0"; }
 	log.Printf("Response FTproompt: %s",resp.Message)
-	return "0" } 
+	return resp.Message } 
  
 
 
@@ -172,12 +173,13 @@ func (s *server) SendLifestyle(ctx context.Context, x *pb.LifestyleRequest) (*pb
 
 	FBctx := context.Background()
 	calc_risk := s.ProcessLifestyle(x.Message) // vertexAI
+	log.Printf("calc_risk: %s\n",calc_risk)
 	print(calc_risk)
 
 	// test firebase add
 	_, _, err2 := client.Collection("patientData").Add(FBctx, map[string]interface{}{
 		"data":x.Message,
-		// "calculated_risk":calc_risk,
+		"calculated_risk":calc_risk,
 	})
 	if err2 != nil { log.Fatalf("Failed adding\n%v", err2)}
 
@@ -254,7 +256,7 @@ func main() {
 
 
 	// grpc connection
-	lis, err := net.Listen("tcp", "localhost:9000");
+	lis, err := net.Listen("tcp", ":9000");
 	if err != nil { log.Fatalf("GRPC: failed to listen:\n%v", err) }
 
 	// serv GRPC
