@@ -1,12 +1,27 @@
 syntax = "proto3";
+package firebaseprototype;
 option go_package = "example/proto_example";
 option java_package = "com.example.testgrpc";
 
+import "google/api/annotations.proto";
+
 service serv {
   rpc Login(UserLogin) returns (SessionToken) {}
-  rpc getDetails(UserRequest) returns (UserDetails) {}
-  rpc getRisk(SessionToken) returns (RiskScore) {}
-  rpc SendLifestyle(LifestyleRequest) returns (LifestyleResponse) {}
+  rpc getDetails(UserRequest) returns (UserDetails) {
+	option (google.api.http) = {
+		post: "/v1/get_details"
+		body: "*"
+	}; }
+  rpc getRisk(SessionToken) returns (RiskScore) {
+	option (google.api.http) = {
+		post: "/v1/get_risk"
+		body: "*"
+	}; }
+  rpc SendLifestyle(LifestyleRequest) returns (LifestyleResponse) {
+	option (google.api.http) = {
+		post: "/v1/send_lifestyle"
+		body: "*"
+	}; }
 }
 
 message UserLogin {

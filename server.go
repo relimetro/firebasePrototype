@@ -254,7 +254,7 @@ func main() {
 
 
 	// grpc connection
-	lis, err := net.Listen("tcp", ":9000");
+	lis, err := net.Listen("tcp", "localhost:9000");
 	if err != nil { log.Fatalf("GRPC: failed to listen:\n%v", err) }
 
 	// serv GRPC
